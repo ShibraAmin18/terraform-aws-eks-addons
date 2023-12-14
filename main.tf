@@ -28,6 +28,7 @@ module "k8s_addons" {
   enable_amazon_eks_aws_ebs_csi_driver = var.amazon_eks_aws_ebs_csi_driver_enabled
   amazon_eks_aws_ebs_csi_driver_config = {
     additional_iam_policies = [var.kms_policy_arn]
+    values  = [file("${path.module}/modules/ebs-csi/values.yaml")]
   }
 
   #cluster-autoscaler
@@ -51,6 +52,7 @@ module "k8s_addons" {
   enable_keda = var.keda_enabled
   keda_helm_config = {
     version = "2.10.2"
+    values  = [file("${path.module}/modules/keda/keda.yaml")]
   }
   #Ingress Nginx Controller
   enable_ingress_nginx = var.ingress_nginx_enabled
@@ -75,7 +77,7 @@ module "k8s_addons" {
   }
 
   #Aws Load balancer Controller
-  enable_aws_load_balancer_controller = var.enable_aws_load_balancer_controller
+  enable_aws_load_balancer_controller = var.aws_load_balancer_controller_enabled
   aws_load_balancer_controller_helm_config = {
     version = var.aws_load_balancer_version
     values = [
@@ -129,7 +131,10 @@ module "k8s_addons" {
 
   # External Secrets
   enable_external_secrets = var.external_secrets_enabled
-
+  external_secrets_helm_config = {
+    values = [file("${path.module}/modules/external-secret/external-secret.yaml")
+    ]
+  }
 }
 
 resource "helm_release" "cert_manager_le_http" {
@@ -198,6 +203,7 @@ module "istio" {
   envoy_access_logs_enabled      = var.istio_config.envoy_access_logs_enabled
   prometheus_monitoring_enabled  = var.istio_config.prometheus_monitoring_enabled
   cert_manager_letsencrypt_email = var.cert_manager_letsencrypt_email
+  istio_values_yaml              = var.istio_config.istio_values_yaml
 }
 
 data "kubernetes_service" "istio-ingress" {
@@ -282,7 +288,7 @@ resource "helm_release" "kubeclarity" {
   count      = var.kubeclarity_enabled ? 1 : 0
   name       = "kubeclarity"
   chart      = "kubeclarity"
-  version    = "2.18.0"
+  version    = "2.22.0"
   namespace  = var.kubeclarity_namespace
   repository = "https://openclarity.github.io/kubeclarity"
   values = [
@@ -307,7 +313,6 @@ resource "aws_eks_addon" "kubecost" {
   cluster_name                = var.eks_cluster_name
   addon_name                  = "kubecost_kubecost"
   addon_version               = data.aws_eks_addon_version.kubecost.version
-  resolve_conflicts_on_create = "OVERWRITE"
   service_account_role_arn    = var.worker_iam_role_arn
   preserve                    = true
 
@@ -422,6 +427,7 @@ resource "helm_release" "metrics-server-vpa" {
 
 #defectdojo
 resource "kubernetes_namespace" "defectdojo" {
+  count      = var.defectdojo_enabled ? 1 : 0
   metadata {
     name = "defectdojo"
   }
@@ -449,34 +455,4 @@ data "kubernetes_secret" "defectdojo" {
     name      = "defectdojo"
     namespace = "defectdojo"
   }
-}
-
-# securecodebox
-module "securecodebox" {
-  count               = var.securecodebox_enabled ? 1 : 0
-  source              = "./modules/securecodebox"
-  defectdojo_hostname = var.defectdojo_hostname
-}
-
-#falco
-resource "kubernetes_namespace" "falco" {
-  metadata {
-    name = "falco"
-  }
-}
-
-resource "helm_release" "falco" {
-  count      = var.falco_enabled ? 1 : 0
-  depends_on = [kubernetes_namespace.falco]
-  name       = "falco"
-  namespace  = "falco"
-  chart      = "falco"
-  repository = "https://falcosecurity.github.io/charts"
-  timeout    = 600
-  version    = "3.4.1"
-  values = [
-    templatefile("${path.module}/modules/falco/values.yaml", {
-      slack_webhook = var.slack_webhook
-    })
-  ]
 }

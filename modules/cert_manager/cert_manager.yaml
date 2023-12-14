@@ -7,10 +7,18 @@ affinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
       - matchExpressions:
-        - key: "Infra-Services"
+        - key: "Addons-Services"
           operator: In
           values:
           - "true"
+
+resources:
+  limits:
+    cpu: 50m
+    memory: 300Mi
+  requests:
+    cpu: 10m
+    memory: 150Mi
 
 webhook:
   affinity:
@@ -18,10 +26,17 @@ webhook:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: "Infra-Services"
+          - key: "Addons-Services"
             operator: In
             values:
             - "true"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 100Mi
+    requests:
+      cpu: 10m
+      memory: 50Mi
 
   podAnnotations:
     co.elastic.logs/enabled: "true"
@@ -32,10 +47,17 @@ cainjector:
       requiredDuringSchedulingIgnoredDuringExecution:
         nodeSelectorTerms:
         - matchExpressions:
-          - key: "Infra-Services"
+          - key: "Addons-Services"
             operator: In
             values:
             - "true"
+  resources:
+    limits:
+      cpu: 100m
+      memory: 250Mi
+    requests:
+      cpu: 10m
+      memory: 200Mi
 
   podAnnotations:
     co.elastic.logs/enabled: "true"

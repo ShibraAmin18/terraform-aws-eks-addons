@@ -94,7 +94,7 @@ variable "ingress_nginx_enabled" {
   type        = bool
 }
 
-variable "enable_aws_load_balancer_controller" {
+variable "aws_load_balancer_controller_enabled" {
   description = "Enable or disable AWS Load Balancer Controller add-on for managing and controlling load balancers in Kubernetes."
   default     = false
   type        = bool
@@ -211,12 +211,14 @@ variable "istio_config" {
     egress_gateway_namespace      = optional(string, "istio-egressgateway")
     envoy_access_logs_enabled     = bool
     prometheus_monitoring_enabled = bool
+    istio_values_yaml             = any
   })
   default = {
     ingress_gateway_enabled       = true
     egress_gateway_enabled        = false
     envoy_access_logs_enabled     = true
     prometheus_monitoring_enabled = true
+    istio_values_yaml             = ""
   }
 }
 
@@ -335,32 +337,15 @@ variable "ipv6_enabled" {
   default     = false
 }
 
-variable "falco_enabled" {
-  description = "Enable falco for security alerts."
-  default     = true
-  type        = bool
-}
-
-variable "slack_webhook" {
-  description = "Slack webhook for falco Alerts."
-  default     = ""
-  type        = string
-}
-variable "securecodebox_enabled" {
-  description = "Enable istio for service mesh."
-  default     = true
-  type        = bool
-}
-
 variable "defectdojo_enabled" {
   description = "Enable istio for service mesh."
-  default     = true
+  default     = false
   type        = bool
 }
 
 variable "defectdojo_hostname" {
   description = "Specify the hostname for the kubecsot. "
-  default     = "defectdojo.dev.skaf.squareops.in"
+  default     = ""
   type        = string
 }
 

@@ -43,14 +43,15 @@ module "eks-addons" {
   istio_enabled                       = true
   istio_config = {
     ingress_gateway_enabled       = true
-    egress_gateway_enabled        = false
+    egress_gateway_enabled        = true
     envoy_access_logs_enabled     = true
     prometheus_monitoring_enabled = true
+    istio_values_yaml             = ""
   }
   karpenter_provisioner_enabled = true
   karpenter_provisioner_config = {
-    private_subnet_name    = "private-subnet-name"
-    instance_capacity_type = ["on-demand"]
+    private_subnet_name    = "${local.environment}-${local.name}-private-subnet"
+    instance_capacity_type = ["spot"]
     excluded_instance_type = ["nano", "micro", "small"]
     instance_hypervisor    = ["nitro"]
   }
